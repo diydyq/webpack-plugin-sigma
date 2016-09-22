@@ -1,0 +1,14 @@
+{
+  "name": "webpack-plugin-sigma",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "keywords": [
+    "webpack",
+    "plugin",
+    "html",
+    "html-webpack-plugin"
+  ],
+  "author": "diydyq@126.com",
+  "license": "MIT"
+}
