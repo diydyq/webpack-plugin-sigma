@@ -12,6 +12,7 @@ var _ = require('lodash');
 function WebpackPluginSigma(options){
   // Default options
   this.options = _.extend({
+    relativePath:   true
   }, options);
 }
 
@@ -21,8 +22,8 @@ WebpackPluginSigma.prototype.apply = function(compiler) {
   compiler.plugin('compilation', function(compilation) {
 
     var publicPath = compilation.options.output.publicPath;
-    // 只有在file协议下访问才只将JS，CSS改为相对路径，图片仍未../../../的绝对路径
-    if(!self.options.envMode.SERVER && !self.options.envMode.dest){
+    // 启用该功能才相对路径
+    if(self.options.relativePath){
       // Convert to relative path for html page.
       compilation.plugin('html-webpack-plugin-alter-asset-tags', function(htmlPluginData, callback) {
 
