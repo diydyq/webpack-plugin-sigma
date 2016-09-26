@@ -6,9 +6,13 @@
 'use strict';
 
 var path = require('path');
+var fs = require('fs');
+var _ = require('lodash');
 
-function WebpackPluginSigma(){
-
+function WebpackPluginSigma(options){
+  // Default options
+  this.options = _.extend({
+  }, options);
 }
 
 WebpackPluginSigma.prototype.apply = function(compiler) {
@@ -16,8 +20,9 @@ WebpackPluginSigma.prototype.apply = function(compiler) {
 
   compiler.plugin('compilation', function(compilation) {
 
-    var outputPath = compilation.options.output.publicPath;
-    if(outputPath[0] === '/'){
+    var publicPath = compilation.options.output.publicPath;
+    // 只有在file协议下访问才只将JS，CSS改为相对路径，图片仍未../../../的绝对路径
+    if(!self.options.envMode.SERVER && !self.options.envMode.dest){
       // Convert to relative path for html page.
       compilation.plugin('html-webpack-plugin-alter-asset-tags', function(htmlPluginData, callback) {
 
@@ -26,10 +31,10 @@ WebpackPluginSigma.prototype.apply = function(compiler) {
 
         //console.info('WebpackPluginSigma-Before:', JSON.stringify(packData.head, null, 4), JSON.stringify(packData.body, null, 4), packData);
         packData.head.forEach(function (vItem) {
-          self.calcPath(vItem, pagePath);
+          self.calcPath(vItem, pagePath, publicPath);
         });
         packData.body.forEach(function (vItem) {
-          self.calcPath(vItem, pagePath);
+          self.calcPath(vItem, pagePath, publicPath);
         });
         //console.info('WebpackPluginSigma-After:', JSON.stringify(packData.head, null, 4), JSON.stringify(packData.body, null, 4), packData);
 
@@ -47,17 +52,18 @@ WebpackPluginSigma.prototype.apply = function(compiler) {
  * @param vItem
  * @param pagePath
  */
-WebpackPluginSigma.prototype.calcPath = function (vItem, pagePath) {
+WebpackPluginSigma.prototype.calcPath = function (vItem, pagePath, publicPath) {
   var attrKeyName = vItem.attributes.href ? 'href' : (vItem.attributes.src ? 'src' : '');
   var attrAbsPath = vItem.attributes[attrKeyName];
   // Convert to relative
-  var attrRelPath = '.' + attrAbsPath;
+  var attrRelPath = attrAbsPath.replace(publicPath, './');
 
-  // Page Path: './page/carservicechannel/home/index.html'
+  // Page Path: './page/searchlist/home/index.html'
   // Link Path: './page/lib/base.bundle.js?f517d7f222f4195b4b86'
+  // Link Path: ./page/searchlist/home/index.bundle.js?86ffeac1892e810a4bab
 
   if(attrKeyName){
-    vItem.attributes[attrKeyName] = path.relative(pagePath, attrRelPath).replace('..\\', '');
+    vItem.attributes[attrKeyName] = path.relative(pagePath, attrRelPath).replace('..' + path.sep, '');
   }else{
     // Failed to find path.
     console.error('Webpack Plugin Sigma path relative failed: ', vItem.attributes);
@@ -65,3 +71,13 @@ WebpackPluginSigma.prototype.calcPath = function (vItem, pagePath) {
 };
 
 module.exports = WebpackPluginSigma;
+
+
+function debugTest(){
+  var p0 = './page/searchlist/home/index.html';
+  var p1 = './page/searchlist/home/index.bundle.js?86ffeac1892e810a4bab';
+  var p2 = './page/lib/base.bundle.js?86ffeac1892e810a4bab';
+
+  console.info(path.relative(p0, p1));
+  console.info(path.relative(p0, p2));
+}
