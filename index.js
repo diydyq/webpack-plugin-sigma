@@ -22,6 +22,15 @@ WebpackPluginSigma.prototype.apply = function(compiler) {
   compiler.plugin('compilation', function(compilation) {
 
     var publicPath = compilation.options.output.publicPath;
+
+    // 定制处理
+    if(self.options.fnHtmlPostProcess){
+      compilation.plugin('html-webpack-plugin-after-html-processing', function(htmlPluginData, callback) {
+        self.options.fnHtmlPostProcess.call(self, htmlPluginData);
+        callback(null, htmlPluginData);
+      });
+    }
+
     // 启用该功能才相对路径
     if(self.options.relativePath){
       // Convert to relative path for html page.
