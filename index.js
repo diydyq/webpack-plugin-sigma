@@ -1,5 +1,5 @@
 /**
- * Used for NUOMI APP projects.
+ * Used for APP projects.
  * 1. Use relative path instead of absolute path to support file protocal access.
  */
 
